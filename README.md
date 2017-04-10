@@ -1,5 +1,7 @@
 # qsqlcipher plugin ( for Qt5 )
 
+Builds only on Qt 5.8.0 for now.
+
 You will need the SQLCipher headers and libraries installed before
 compiling this plugin.
 
