@@ -1,6 +1,6 @@
-# qsqlcipher plugin ( for Qt5 )
+# Qt SQL driver plugin for SQLCipher ( for Qt 5 )
 
-Builds only on Qt 5.8.0 for now.
+Builds only on Qt **5.8.0** for now.
 See https://github.com/sijk/qt5-sqlcipher to build up to Qt 5.7.x
 
 You will need the SQLCipher headers and libraries installed before
@@ -22,9 +22,12 @@ make
 make install  # most propably with sudo
 ```
 
-Tested only on Archlinux (x64) and MSYS2 (x64)
+Tested only on Archlinux (x64) and MSYS2 (x64) with sqlcipher 3.4.1
+and Qt 5.8.0.
+
 
 ## Licences
 
 sqlciher (**MIT**)
+
 Qt libraries (**GPL3  LGPL3**)
