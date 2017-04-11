@@ -15,7 +15,8 @@ modifications from the same source.
 ## Build instructions
 
 ```bash
-cd srcdir
+git clone https://github.com/sjemens/qsqlcipher-qt5.git
+cd qsqlcipher-qt5
 mkdir -p build && cd build
 qmake ../qsqlcipher-qt5.pro
 make
@@ -28,6 +29,8 @@ and Qt 5.8.0.
 
 ## Licences
 
-sqlciher (**MIT**)
+For this plugin see LICENCE (**LGPLV3**)
 
-Qt libraries (**GPL3  LGPL3**)
+[SQLCipher](https://www.zetetic.net/sqlcipher/license/) (**BSD**)
+
+[Qt5 libraries](https://www.qt.io/licensing/) (**LGPLV3  GPLV2/GPLV3**)
