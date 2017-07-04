@@ -1,6 +1,6 @@
 # Qt SQL driver plugin for SQLCipher ( for Qt 5 )
 
-Builds on Qt > **5.8.0**.
+Builds on Qt >= **5.8.0**.
 See https://github.com/sijk/qt5-sqlcipher to build up to Qt 5.5.x
 
 You will need the SQLCipher headers and libraries installed before
