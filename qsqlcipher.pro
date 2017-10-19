@@ -1,6 +1,6 @@
 TARGET = qsqlcipher
 
-QT_FOR_CONFIG += sql-private
+QT_FOR_CONFIG += sqldrivers-private
 
 HEADERS += $$PWD/qsql_sqlite_p.h
 SOURCES += $$PWD/qsql_sqlite.cpp $$PWD/smain.cpp
