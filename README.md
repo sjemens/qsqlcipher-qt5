@@ -3,13 +3,16 @@
 Builds on Qt >= **5.8.0**.
 See https://github.com/sijk/qt5-sqlcipher to build up to Qt 5.5.x
 
-You will need the SQLCipher headers and libraries installed before
-compiling this plugin.
-
 The qsqlcipher.pro and smain.cpp are based on files from qsqlite
  qtbase/src/plugins/sqldrivers/sqlite.
 The qsql_sqlite.cpp and qsql_sqlite_p.h were copied without
 modifications from the same source.
+
+## Dependencies
+
+The SQLCipher headers and libraries should be installed before
+compiling this plugin. Also, if pkg-config is not available you should
+edit the qsqlcipher.pro and set the INCLUDEPATH and LIBS variables.
 
 
 ## Build instructions
