@@ -213,9 +213,7 @@ void QSQLiteResultPrivate::initColumns(bool emptyResultset)
         QString colName = QString(reinterpret_cast<const QChar *>(
                     sqlite3_column_name16(stmt, i))
                     ).remove(QLatin1Char('"'));
-        const QString tableName = QString(reinterpret_cast<const QChar *>(
-                            sqlite3_column_table_name16(stmt, i))
-                            ).remove(QLatin1Char('"'));
+
         // must use typeName for resolving the type to match QSqliteDriver::record
         QString typeName = QString(reinterpret_cast<const QChar *>(
                     sqlite3_column_decltype16(stmt, i)));
@@ -248,7 +246,7 @@ void QSQLiteResultPrivate::initColumns(bool emptyResultset)
             }
         }
 
-        QSqlField fld(colName, fieldType, tableName);
+        QSqlField fld(colName, fieldType);
         fld.setSqlType(stp);
         rInf.append(fld);
     }
@@ -915,7 +913,7 @@ static QSqlIndex qGetTableInfo(QSqlQuery &q, const QString &tableName, bool only
         if (onlyPIndex && !isPk)
             continue;
         QString typeName = q.value(2).toString().toLower();
-        QSqlField fld(q.value(1).toString(), qGetColumnType(typeName), tableName);
+        QSqlField fld(q.value(1).toString(), qGetColumnType(typeName));
         if (isPk && (typeName == QLatin1String("integer")))
             // INTEGER PRIMARY KEY fields are auto-generated in sqlite
             // INT PRIMARY KEY is not the same as INTEGER PRIMARY KEY!
