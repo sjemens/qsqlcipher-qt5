@@ -26,8 +26,7 @@ make
 make install  # most propably with sudo
 ```
 
-Tested only on Archlinux (x64) and MSYS2 (x64) with sqlcipher 3.4.1
-and Qt versions 5.8.0 and 5.9.0.
+Tested on Archlinux (x64) and MSYS2 (x64 only) with every Qt version after 5.8.0.
 
 
 ## Licences
