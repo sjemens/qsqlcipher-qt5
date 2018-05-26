@@ -51,11 +51,14 @@
 #include <qstringlist.h>
 #include <qvector.h>
 #include <qdebug.h>
-#ifndef QT_NO_REGULAREXPRESSION
+#if QT_CONFIG(regularexpression)
 #include <qcache.h>
 #include <qregularexpression.h>
 #endif
+#if QT_CONFIG(timezone)
 #include <QTimeZone>
+#endif
+#include <QScopedValueRollback>
 
 #if defined Q_OS_WIN
 # include <qt_windows.h>
@@ -123,19 +126,20 @@ class QSQLiteResult : public QSqlCachedResult
 public:
     explicit QSQLiteResult(const QSQLiteDriver* db);
     ~QSQLiteResult();
-    QVariant handle() const Q_DECL_OVERRIDE;
+    QVariant handle() const override;
 
 protected:
-    bool gotoNext(QSqlCachedResult::ValueCache& row, int idx) Q_DECL_OVERRIDE;
-    bool reset(const QString &query) Q_DECL_OVERRIDE;
-    bool prepare(const QString &query) Q_DECL_OVERRIDE;
-    bool exec() Q_DECL_OVERRIDE;
-    int size() Q_DECL_OVERRIDE;
-    int numRowsAffected() Q_DECL_OVERRIDE;
-    QVariant lastInsertId() const Q_DECL_OVERRIDE;
-    QSqlRecord record() const Q_DECL_OVERRIDE;
-    void detachFromResultSet() Q_DECL_OVERRIDE;
-    void virtual_hook(int id, void *data) Q_DECL_OVERRIDE;
+    bool gotoNext(QSqlCachedResult::ValueCache& row, int idx) override;
+    bool reset(const QString &query) override;
+    bool prepare(const QString &query) override;
+    bool execBatch(bool arrayBind) override;
+    bool exec() override;
+    int size() override;
+    int numRowsAffected() override;
+    QVariant lastInsertId() const override;
+    QSqlRecord record() const override;
+    void detachFromResultSet() override;
+    void virtual_hook(int id, void *data) override;
 };
 
 class QSQLiteDriverPrivate : public QSqlDriverPrivate
@@ -213,7 +217,11 @@ void QSQLiteResultPrivate::initColumns(bool emptyResultset)
         QString colName = QString(reinterpret_cast<const QChar *>(
                     sqlite3_column_name16(stmt, i))
                     ).remove(QLatin1Char('"'));
-
+#ifdef ENABLE_COLUMN_METADATA
+        const QString tableName = QString(reinterpret_cast<const QChar *>(
+                            sqlite3_column_table_name16(stmt, i))
+                            ).remove(QLatin1Char('"'));
+#endif
         // must use typeName for resolving the type to match QSqliteDriver::record
         QString typeName = QString(reinterpret_cast<const QChar *>(
                     sqlite3_column_decltype16(stmt, i)));
@@ -245,8 +253,11 @@ void QSQLiteResultPrivate::initColumns(bool emptyResultset)
                 break;
             }
         }
-
+#ifdef ENABLE_COLUMN_METADATA
+        QSqlField fld(colName, fieldType, tableName);
+#else
         QSqlField fld(colName, fieldType);
+#endif
         fld.setSqlType(stp);
         rInf.append(fld);
     }
@@ -434,11 +445,36 @@ static QString timespecToString(const QDateTime &dateTime)
         return QStringLiteral("Z");
     case Qt::OffsetFromUTC:
         return secondsToOffset(dateTime.offsetFromUtc());
+#if QT_CONFIG(timezone)
     case Qt::TimeZone:
         return secondsToOffset(dateTime.timeZone().offsetFromUtc(dateTime));
+#endif
     default:
         return QString();
     }
+}
+
+bool QSQLiteResult::execBatch(bool arrayBind)
+{
+    Q_UNUSED(arrayBind);
+    Q_D(QSqlResult);
+    QScopedValueRollback<QVector<QVariant>> valuesScope(d->values);
+    QVector<QVariant> values = d->values;
+    if (values.count() == 0)
+        return false;
+
+    for (int i = 0; i < values.at(0).toList().count(); ++i) {
+        d->values.clear();
+        QScopedValueRollback<QHash<QString, QVector<int>>> indexesScope(d->indexes);
+        QHash<QString, QVector<int>>::const_iterator it = d->indexes.constBegin();
+        while (it != d->indexes.constEnd()) {
+            bindValue(it.key(), values.at(it.value().first()).toList().at(i), QSql::In);
+            ++it;
+        }
+        if (!exec())
+            return false;
+    }
+    return true;
 }
 
 bool QSQLiteResult::exec()
@@ -465,8 +501,11 @@ bool QSQLiteResult::exec()
 
 #if (SQLITE_VERSION_NUMBER >= 3003011)
     // In the case of the reuse of a named placeholder
-    if (paramCount < values.count()) {
-        const auto countIndexes = [](int counter, const QList<int>& indexList) {
+    // We need to check explicitly that paramCount is greater than or equal to 1, as sqlite
+    // can end up in a case where for virtual tables it returns 0 even though it
+    // has parameters
+    if (paramCount >= 1 && paramCount < values.count()) {
+        const auto countIndexes = [](int counter, const QVector<int> &indexList) {
                                       return counter + indexList.length();
                                   };
 
@@ -480,13 +519,14 @@ bool QSQLiteResult::exec()
         // placeholders. So we need to ensure the QVector has only one instance of
         // each value as SQLite will do the rest for us.
         QVector<QVariant> prunedValues;
-        QList<int> handledIndexes;
+        QVector<int> handledIndexes;
         for (int i = 0, currentIndex = 0; i < values.size(); ++i) {
             if (handledIndexes.contains(i))
                 continue;
             const auto placeHolder = QString::fromUtf8(sqlite3_bind_parameter_name(d->stmt, currentIndex + 1));
-            handledIndexes << d->indexes[placeHolder];
-            prunedValues << values.at(d->indexes[placeHolder].first());
+            const auto &indexes = d->indexes.value(placeHolder);
+            handledIndexes << indexes;
+            prunedValues << values.at(indexes.first());
             ++currentIndex;
         }
         values = prunedValues;
@@ -620,7 +660,7 @@ QVariant QSQLiteResult::handle() const
 
 /////////////////////////////////////////////////////////
 
-#ifndef QT_NO_REGULAREXPRESSION
+#if QT_CONFIG(regularexpression)
 static void _q_regexp(sqlite3_context* context, int argc, sqlite3_value** argv)
 {
     if (Q_UNLIKELY(argc != 2)) {
@@ -719,7 +759,7 @@ bool QSQLiteDriver::open(const QString & db, const QString &, const QString &, c
     bool sharedCache = false;
     bool openReadOnlyOption = false;
     bool openUriOption = false;
-#ifndef QT_NO_REGULAREXPRESSION
+#if QT_CONFIG(regularexpression)
     static const QLatin1String regexpConnectOption = QLatin1String("QSQLITE_ENABLE_REGEXP");
     bool defineRegexp = false;
     int regexpCacheSize = 25;
@@ -743,7 +783,7 @@ bool QSQLiteDriver::open(const QString & db, const QString &, const QString &, c
         } else if (option == QLatin1String("QSQLITE_ENABLE_SHARED_CACHE")) {
             sharedCache = true;
         }
-#ifndef QT_NO_REGULAREXPRESSION
+#if QT_CONFIG(regularexpression)
         else if (option.startsWith(regexpConnectOption)) {
             option = option.mid(regexpConnectOption.size()).trimmed();
             if (option.isEmpty()) {
@@ -772,7 +812,7 @@ bool QSQLiteDriver::open(const QString & db, const QString &, const QString &, c
         sqlite3_busy_timeout(d->access, timeOut);
         setOpen(true);
         setOpenError(false);
-#ifndef QT_NO_REGULAREXPRESSION
+#if QT_CONFIG(regularexpression)
         if (defineRegexp) {
             auto cache = new QCache<QString, QRegularExpression>(regexpCacheSize);
             sqlite3_create_function_v2(d->access, "regexp", 2, SQLITE_UTF8, cache, &_q_regexp, NULL,
@@ -913,7 +953,11 @@ static QSqlIndex qGetTableInfo(QSqlQuery &q, const QString &tableName, bool only
         if (onlyPIndex && !isPk)
             continue;
         QString typeName = q.value(2).toString().toLower();
+#ifdef ENABLE_COLUMN_METADATA
+        QSqlField fld(q.value(1).toString(), qGetColumnType(typeName), tableName);
+#else
         QSqlField fld(q.value(1).toString(), qGetColumnType(typeName));
+#endif
         if (isPk && (typeName == QLatin1String("integer")))
             // INTEGER PRIMARY KEY fields are auto-generated in sqlite
             // INT PRIMARY KEY is not the same as INTEGER PRIMARY KEY!
