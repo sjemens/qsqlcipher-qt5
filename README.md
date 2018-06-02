@@ -32,6 +32,26 @@ make install  # most propably with sudo
 
 Tested on Archlinux (x64) and MSYS2 (x64 only) with every Qt version after 5.8.0.
 
+### Specific instructions for Ubuntu 18.04 (Bionic Beaver)
+
+Currently 'bionic beaver' comes with Qt 5.9.5
+
+```bash
+sudo apt-get update
+sudo apt-get install -y \
+ build-essential pkg-config libsqlcipher-dev qtbase5-private-dev
+export QT_SELECT=5
+wget https://github.com/sjemens/qsqlcipher-qt5/archive/v5.9.5-1.tar.gz
+tar xf v5.9.5-1.tar.gz
+cd qsqlcipher-qt5-5.9.5-1
+mkdir -p build && cd build
+qmake ../qsqlcipher.pro
+make
+sudo make install
+```
+
+Tested only inside an LXD container. If there are differences with a clean
+installation, please let me know.
 
 ## Licences
 
