@@ -22,7 +22,7 @@ edit the qsqlcipher.pro and set the INCLUDEPATH and LIBS variables.
 git clone https://github.com/sjemens/qsqlcipher-qt5.git
 cd qsqlcipher-qt5
 mkdir -p build && cd build
-qmake ../qsqlcipher-qt5.pro
+qmake ../qsqlcipher.pro
 # Or if the sqlcipher library was built with the ENABLE_COLUMN_METADATA macro
 # defined, enable it also for qsqlcipher. Replace the above qmake command with
 # qmake ../qsqlcipher-qt5.pro DEFINES+=ENABLE_COLUMN_METADATA
