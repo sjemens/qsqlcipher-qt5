@@ -1,6 +1,6 @@
 # Qt SQL driver plugin for SQLCipher ( for Qt 5 )
 
-The master branch builds against the Qt version **5.11.0**.
+The master branch builds against the Qt version **5.11.1**.
 To build for previous versions choose from the releases the one that
 matches the system's Qt version.
 See https://github.com/sijk/qt5-sqlcipher to build up to Qt 5.5.x
@@ -25,7 +25,7 @@ mkdir -p build && cd build
 qmake ../qsqlcipher.pro
 # Or if the sqlcipher library was built with the ENABLE_COLUMN_METADATA macro
 # defined, enable it also for qsqlcipher. Replace the above qmake command with
-# qmake ../qsqlcipher-qt5.pro DEFINES+=ENABLE_COLUMN_METADATA
+# qmake ../qsqlcipher.pro DEFINES+=ENABLE_COLUMN_METADATA
 make
 make install  # most propably with sudo
 ```
