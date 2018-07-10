@@ -3,9 +3,18 @@ TEMPLATE = app
 TARGET = qsqlcipher_test
 unix: CONFIG += testcase
 win32: {
-  CONFIG += build_all
+    CONFIG += build_all
+    QMAKE_SUBSTITUTES += qt_conf
+    qt_conf.input = qt.conf.in
+    build_pass: CONFIG(debug, debug|release) {
+        qt_conf.output = debug/qt.conf
+    }
+    else: build_pass {
+        qt_conf.output = release/qt.conf
+    }
+} else {
+    QMAKE_SUBSTITUTES += qt.conf.in
 }
-INCLUDEPATH += .
 
 # The following define makes your compiler warn you if you use any
 # feature of Qt which has been marked as deprecated (the exact warnings
