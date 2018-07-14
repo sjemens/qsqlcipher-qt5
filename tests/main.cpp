@@ -1,3 +1,5 @@
+// This is a modified test suite from
+// https://github.com/sijk/qt5-sqlcipher/blob/master/test-shared/main.cpp
 #include <QtTest/QtTest>
 #include <QTemporaryDir>
 #include <QSqlDatabase>
@@ -40,7 +42,9 @@ void TestQSqlCipher::checkVersion()
     QSqlQuery q(QSqlDatabase::database("db"));
     QVERIFY2(q.exec("PRAGMA cipher_version;"), q.lastError().text().toLatin1().constData());
     QVERIFY(q.next());
-    QCOMPARE(q.value(0).toString(), QString("3.4.2"));
+    // The next should have been optional
+    // maybe if there is a need to test for sqlcipher's version
+    // QCOMPARE(q.value(0).toString(), QString("3.4.2"));
 }
 
 void TestQSqlCipher::checkCompileOptions()
