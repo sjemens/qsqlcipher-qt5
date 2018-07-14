@@ -1,2 +1,3 @@
 TEMPLATE = subdirs
-SUBDIRS += qsqlcipher tests
+SUBDIRS += qsqlcipher
+CONFIG(withTests): SUBDIRS += tests
