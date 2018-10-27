@@ -1,6 +1,6 @@
 # Qt SQL driver plugin for SQLCipher ( for Qt 5 )
 
-Builds on Qt = **5.9.6**.
+Builds on Qt = **5.9.7**.
 
 The qsqlcipher.pro and smain.cpp are based on files from qsqlite
  qtbase/src/plugins/sqldrivers/sqlite.
@@ -17,7 +17,7 @@ edit the qsqlcipher.pro and set the INCLUDEPATH and LIBS variables.
 ## Build instructions
 
 ```bash
-git clone -b 5.9.6 https://github.com/sjemens/qsqlcipher-qt5.git
+git clone -b 5.9.7 https://github.com/sjemens/qsqlcipher-qt5.git
 cd qsqlcipher-qt5
 mkdir -p build && cd build
 qmake ../qsqlcipher-qt5.pro
