@@ -55,9 +55,6 @@
 #include <qcache.h>
 #include <qregularexpression.h>
 #endif
-#if QT_CONFIG(timezone)
-#include <QTimeZone>
-#endif
 #include <QScopedValueRollback>
 
 #if defined Q_OS_WIN
@@ -109,7 +106,7 @@ static QVariant::Type qGetColumnType(const QString &tpName)
 }
 
 static QSqlError qMakeError(sqlite3 *access, const QString &descr, QSqlError::ErrorType type,
-                            int errorCode = -1)
+                            int errorCode)
 {
     return QSqlError(descr,
                      QString(reinterpret_cast<const QChar *>(sqlite3_errmsg16(access))),
@@ -217,7 +214,7 @@ void QSQLiteResultPrivate::initColumns(bool emptyResultset)
         QString colName = QString(reinterpret_cast<const QChar *>(
                     sqlite3_column_name16(stmt, i))
                     ).remove(QLatin1Char('"'));
-#ifdef ENABLE_COLUMN_METADATA
+#ifndef DISABLE_COLUMN_METADATA
         const QString tableName = QString(reinterpret_cast<const QChar *>(
                             sqlite3_column_table_name16(stmt, i))
                             ).remove(QLatin1Char('"'));
@@ -253,7 +250,7 @@ void QSQLiteResultPrivate::initColumns(bool emptyResultset)
                 break;
             }
         }
-#ifdef ENABLE_COLUMN_METADATA
+#ifndef DISABLE_COLUMN_METADATA
         QSqlField fld(colName, fieldType, tableName);
 #else
         QSqlField fld(colName, fieldType);
@@ -426,34 +423,6 @@ bool QSQLiteResult::prepare(const QString &query)
     return true;
 }
 
-static QString secondsToOffset(int seconds)
-{
-    const QChar sign = ushort(seconds < 0 ? '-' : '+');
-    seconds = qAbs(seconds);
-    const int hours = seconds / 3600;
-    const int minutes = (seconds % 3600) / 60;
-
-    return QString(QStringLiteral("%1%2:%3")).arg(sign).arg(hours, 2, 10, QLatin1Char('0')).arg(minutes, 2, 10, QLatin1Char('0'));
-}
-
-static QString timespecToString(const QDateTime &dateTime)
-{
-    switch (dateTime.timeSpec()) {
-    case Qt::LocalTime:
-        return QString();
-    case Qt::UTC:
-        return QStringLiteral("Z");
-    case Qt::OffsetFromUTC:
-        return secondsToOffset(dateTime.offsetFromUtc());
-#if QT_CONFIG(timezone)
-    case Qt::TimeZone:
-        return secondsToOffset(dateTime.timeZone().offsetFromUtc(dateTime));
-#endif
-    default:
-        return QString();
-    }
-}
-
 bool QSQLiteResult::execBatch(bool arrayBind)
 {
     Q_UNUSED(arrayBind);
@@ -560,7 +529,7 @@ bool QSQLiteResult::exec()
                     break;
                 case QVariant::DateTime: {
                     const QDateTime dateTime = value.toDateTime();
-                    const QString str = dateTime.toString(QLatin1String("yyyy-MM-ddThh:mm:ss.zzz") + timespecToString(dateTime));
+                    const QString str = dateTime.toString(Qt::ISODateWithMs);
                     res = sqlite3_bind_text16(d->stmt, i + 1, str.utf16(),
                                               str.size() * sizeof(ushort), SQLITE_TRANSIENT);
                     break;
@@ -678,7 +647,7 @@ static void _q_regexp(sqlite3_context* context, int argc, sqlite3_value** argv)
     const bool wasCached = regexp;
 
     if (!wasCached)
-        regexp = new QRegularExpression(pattern, QRegularExpression::DontCaptureOption | QRegularExpression::OptimizeOnFirstUsageOption);
+        regexp = new QRegularExpression(pattern, QRegularExpression::DontCaptureOption);
 
     const bool found = subject.contains(*regexp);
 
@@ -808,7 +777,9 @@ bool QSQLiteDriver::open(const QString & db, const QString &, const QString &, c
 
     openMode |= SQLITE_OPEN_NOMUTEX;
 
-    if (sqlite3_open_v2(db.toUtf8().constData(), &d->access, openMode, NULL) == SQLITE_OK) {
+    const int res = sqlite3_open_v2(db.toUtf8().constData(), &d->access, openMode, NULL);
+
+    if (res == SQLITE_OK) {
         sqlite3_busy_timeout(d->access, timeOut);
         setOpen(true);
         setOpenError(false);
@@ -821,14 +792,15 @@ bool QSQLiteDriver::open(const QString & db, const QString &, const QString &, c
 #endif
         return true;
     } else {
+        setLastError(qMakeError(d->access, tr("Error opening database"),
+                     QSqlError::ConnectionError, res));
+        setOpenError(true);
+
         if (d->access) {
             sqlite3_close(d->access);
             d->access = 0;
         }
 
-        setLastError(qMakeError(d->access, tr("Error opening database"),
-                     QSqlError::ConnectionError));
-        setOpenError(true);
         return false;
     }
 }
@@ -845,8 +817,10 @@ void QSQLiteDriver::close()
             sqlite3_update_hook(d->access, NULL, NULL);
         }
 
-        if (sqlite3_close(d->access) != SQLITE_OK)
-            setLastError(qMakeError(d->access, tr("Error closing database"), QSqlError::ConnectionError));
+        const int res = sqlite3_close(d->access);
+
+        if (res != SQLITE_OK)
+            setLastError(qMakeError(d->access, tr("Error closing database"), QSqlError::ConnectionError, res));
         d->access = 0;
         setOpen(false);
         setOpenError(false);
@@ -953,17 +927,20 @@ static QSqlIndex qGetTableInfo(QSqlQuery &q, const QString &tableName, bool only
         if (onlyPIndex && !isPk)
             continue;
         QString typeName = q.value(2).toString().toLower();
-#ifdef ENABLE_COLUMN_METADATA
+        QString defVal = q.value(4).toString();
+        if (!defVal.isEmpty() && defVal.at(0) == QLatin1Char('\'')) {
+            const int end = defVal.lastIndexOf(QLatin1Char('\''));
+            if (end > 0)
+                defVal = defVal.mid(1, end - 1);
+        }
+
         QSqlField fld(q.value(1).toString(), qGetColumnType(typeName), tableName);
-#else
-        QSqlField fld(q.value(1).toString(), qGetColumnType(typeName));
-#endif
         if (isPk && (typeName == QLatin1String("integer")))
             // INTEGER PRIMARY KEY fields are auto-generated in sqlite
             // INT PRIMARY KEY is not the same as INTEGER PRIMARY KEY!
             fld.setAutoValue(true);
         fld.setRequired(q.value(3).toInt() != 0);
-        fld.setDefaultValue(q.value(4));
+        fld.setDefaultValue(defVal);
         ind.append(fld);
     }
     return ind;
