@@ -30,6 +30,8 @@ Assuming Qt is installed in ~/Qt this would be something like ~/Qt/5.12.1/androi
 
 For this plugin see [LICENCE](https://github.com/sjemens/qsqlcipher-qt5/blob/master/LICENSE) (**LGPLV3**)
 
+[OpenSSL](https://www.openssl.org/source/license.html) (**dual OpenSSL and SSLeay License**)
+
 [SQLCipher](https://www.zetetic.net/sqlcipher/license/) (**BSD**)
 
 [Qt5 libraries](https://www.qt.io/licensing/) (**LGPLV3  GPLV2/GPLV3**)
