@@ -1,6 +1,6 @@
 # Qt SQL driver plugin for SQLCipher ( for Qt 5 )
 
-The master branch builds against the Qt version **5.12.1**.
+This branch builds against the Qt version **5.12.1**.
 To build for previous versions choose from the releases the one that
 matches the system's Qt version.
 See https://github.com/sijk/qt5-sqlcipher to build up to Qt 5.5.x
@@ -62,24 +62,6 @@ and not the one in 'QT_INSTALL_PLUGINS' is to define the QT_DEBUG_PLUGINS
 and check the loaded library path.
 ```bash
 QT_DEBUG_PLUGINS=1 ./tests/qsqcipher_test
-```
-
-### Specific instructions for Ubuntu 18.04 (Bionic Beaver)
-
-Currently 'bionic beaver' comes with Qt 5.9.5
-
-```bash
-sudo apt-get update
-sudo apt-get install -y \
- build-essential pkg-config libsqlcipher-dev qtbase5-private-dev
-export QT_SELECT=5
-wget https://github.com/sjemens/qsqlcipher-qt5/archive/v5.9.5-1.tar.gz
-tar xf v5.9.5-1.tar.gz
-cd qsqlcipher-qt5-5.9.5-1
-mkdir -p build && cd build
-qmake ../qsqlcipher.pro
-make
-sudo make install
 ```
 
 Tested only inside an LXD container. If there are differences with a clean
