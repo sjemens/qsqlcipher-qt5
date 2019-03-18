@@ -1,6 +1,6 @@
 # Qt SQL driver plugin for SQLCipher ( for Qt 5 )
 
-The master branch builds against the Qt version **5.12.1**.
+The master branch builds against the Qt version **5.12.2**.
 To build for previous versions choose from the releases the one that
 matches the system's Qt version.
 See https://github.com/sijk/qt5-sqlcipher to build up to Qt 5.5.x
@@ -61,7 +61,7 @@ sudo make install
 and not the one in 'QT_INSTALL_PLUGINS' is to define the QT_DEBUG_PLUGINS
 and check the loaded library path.
 ```bash
-QT_DEBUG_PLUGINS=1 ./tests/qsqcipher_test
+QT_DEBUG_PLUGINS=1 ./tests/qsqlcipher_test
 ```
 
 ### Specific instructions for Ubuntu 18.04 (Bionic Beaver)
