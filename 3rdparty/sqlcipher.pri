@@ -28,7 +28,7 @@ INCLUDEPATH +=  $$PWD/libtomcrypt/src/headers
 LIBS += $$PWD/libtomcrypt/libtomcrypt.a
 
 # The sqlite3.c produces too many warnings
-# Uncomment the following line to turn them off 
-#QMAKE_CFLAGS_WARN_ON=-w
+# Comment the following line to turn them on
+QMAKE_CFLAGS_WARN_ON=-w
 
 TR_EXCLUDE += $$PWD/*
