@@ -25,8 +25,12 @@ HEADERS +=      $$PWD/sqlcipher/sqlite3.h
 SOURCES +=      $$PWD/sqlcipher/sqlite3.c
 
 INCLUDEPATH +=  $$PWD/libtomcrypt/src/headers
-LIBS += $$PWD/libtomcrypt/libtomcrypt.a
-
+win32-msvc {
+    QMAKE_LFLAGS_PLUGIN += "/NODEFAULTLIB:LIBCMT"
+    LIBS += $$PWD/libtomcrypt/tomcrypt.lib
+} else {
+    LIBS += $$PWD/libtomcrypt/libtomcrypt.a
+}
 # The sqlite3.c produces too many warnings
 # Comment the following line to turn them on
 QMAKE_CFLAGS_WARN_ON=-w

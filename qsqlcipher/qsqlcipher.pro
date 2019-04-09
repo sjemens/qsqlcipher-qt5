@@ -28,5 +28,10 @@ load(qt_plugin)
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
 QMAKE_EXTRA_TARGETS += libtomcrypt
-libtomcrypt.commands = cd $$PWD/../3rdparty/libtomcrypt && make library CFLAGS=-fPIC
+win32-msvc {
+    libtomcrypt.commands = cd $$PWD/../3rdparty/libtomcrypt && \
+    nmake -f makefile.msvc CFLAGS="/Ox"
+} else {
+    libtomcrypt.commands = cd $$PWD/../3rdparty/libtomcrypt && make library CFLAGS=-fPIC
+}
 PRE_TARGETDEPS += libtomcrypt
