@@ -88,4 +88,6 @@ For this plugin see [LICENCE](https://github.com/sjemens/qsqlcipher-qt5/blob/mas
 
 [SQLCipher](https://www.zetetic.net/sqlcipher/license/) (**BSD**)
 
-[Qt5 libraries](https://www.qt.io/licensing/) (**LGPLV3  GPLV2/GPLV3**)
+[Qt5 libraries](https://www.qt.io/licensing/) (**LGPLV3**) or (**GPLV2/GPLV3**)
+
+[LibTomCrypt](https://github.com/libtom/libtomcrypt/blob/develop/LICENSE) (**public domain**) or (**WTFPL**)
