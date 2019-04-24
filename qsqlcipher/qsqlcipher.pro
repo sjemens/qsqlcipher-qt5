@@ -13,6 +13,14 @@ system-sqlcipher {
     # LIBS += -L/path/to/lib/ -lsqlcipher -lcrypto
 } else {
     include($$PWD/../3rdparty/sqlcipher.pri)
+    QMAKE_EXTRA_TARGETS += libtomcrypt
+    win32-msvc {
+        libtomcrypt.commands = cd $$PWD/../3rdparty/libtomcrypt && \
+        nmake -f makefile.msvc CFLAGS="/Ox"
+    } else {
+        libtomcrypt.commands = cd $$PWD/../3rdparty/libtomcrypt && make library CFLAGS=-fPIC
+    }
+    PRE_TARGETDEPS += libtomcrypt
 }
 
 OTHER_FILES += sqlcipher.json .qmake.conf
@@ -27,11 +35,4 @@ load(qt_plugin)
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
-QMAKE_EXTRA_TARGETS += libtomcrypt
-win32-msvc {
-    libtomcrypt.commands = cd $$PWD/../3rdparty/libtomcrypt && \
-    nmake -f makefile.msvc CFLAGS="/Ox"
-} else {
-    libtomcrypt.commands = cd $$PWD/../3rdparty/libtomcrypt && make library CFLAGS=-fPIC
-}
-PRE_TARGETDEPS += libtomcrypt
+
