@@ -1,1 +1,6 @@
 build*
+*.pro.user*
+*.o
+*.a
+*.obj
+*.lib
