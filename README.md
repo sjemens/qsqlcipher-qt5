@@ -1,7 +1,6 @@
 # Qt SQL driver plugin for SQLCipher ( for Qt 5 ) with android libs
 
-This branch builds against the Qt version **5.12.1** but should also work for **5.12.0**
-just by changing the version to .qmake.conf'
+This branch builds against the Qt **5.12.x** version
 
 ## Dependencies
 
