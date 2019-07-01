@@ -1,12 +1,12 @@
 # Qt SQL driver plugin for SQLCipher ( for Qt 5 )
 
-The master branch builds against the Qt version **5.12.4**.
+The master branch builds against the Qt version **5.13**.
 To build for previous versions choose from the releases the one that
 matches the system's Qt version.
 See https://github.com/sijk/qt5-sqlcipher to build up to Qt 5.5.x
 
 The sources for this plugin are based on the sqlite plugin from
-[qt/qtbase](https://github.com/qt/qtbase/tree/5.12/src/plugins/sqldrivers/sqlite)
+[qt/qtbase](https://github.com/qt/qtbase/tree/5.13/src/plugins/sqldrivers/sqlite)
 
 ## Dependencies
 
