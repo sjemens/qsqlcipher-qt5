@@ -78,9 +78,9 @@ and check the loaded library path.
 QT_DEBUG_PLUGINS=1 ./tests/qsqlcipher_test
 ```
 
-## Licences
+## Licenses
 
-For this plugin see [LICENCE](https://github.com/sjemens/qsqlcipher-qt5/blob/master/LICENSE) (**LGPLV3**)
+For this plugin see [LICENSE](https://github.com/sjemens/qsqlcipher-qt5/blob/5.15/LICENSE) (**LGPLV3**)
 
 [libtomcrypt](https://github.com/libtom/libtomcrypt/blob/develop/LICENSE) (**Public domain**)
 
