@@ -1,6 +1,6 @@
 # Qt SQL driver plugin for SQLCipher ( for Qt 5 ) with android libs
 
-This branch builds against the Qt **5.12.x** version
+This branch builds against the Qt **5.15.x** version
 
 ## Dependencies
 
@@ -11,18 +11,18 @@ want to build your own
 
 ## Build instructions
 
-Only building with Qt Creator on ubuntu 18.04 is tested at the moment.
+Tested only with Qt Creator on windows 10.
 
 First download the sources
 ```bash
 git clone https://github.com/sjemens/qsqlcipher-qt5.git
-git checkout android
+git checkout android-5.15
 ```
 
 and open the qsqlcipher.pro with Qt Creator. Choose the right toolchain and press build.
 
 Finally copy the resulting libqsqlcipher.so to the QT_INSTALL_PLUGINS/sqldrivers folder.
-Assuming Qt is installed in ~/Qt this would be something like ~/Qt/5.12.1/android_armv7a/plugins/sqldrivers
+Assuming Qt is installed in ~/Qt this would be something like ~/Qt/5.15.1/android_armv7a/plugins/sqldrivers
 
 
 ## Licences

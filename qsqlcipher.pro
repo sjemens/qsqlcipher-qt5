@@ -1,4 +1,5 @@
 TARGET = qsqlcipher
+CONFIG+=c++14
 
 QT_FOR_CONFIG += sqldrivers-private
 
@@ -17,7 +18,12 @@ android {
 # set manually the INCLUDEPATH and LIBS
 }
 
-OTHER_FILES += sqlcipher.json .qmake.conf
+OTHER_FILES += sqlcipher.json .qmake.conf \
+    README.md \
+    LICENSE \
+    android-libs/VERSIONS \
+    android-libs/LICENSE.sqlcipher
+    android-libs/LICENSE.openssl
 
 PLUGIN_CLASS_NAME = QSQLCipherDriverPlugin
 
