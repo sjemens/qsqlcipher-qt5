@@ -25,9 +25,9 @@ Finally copy the resulting libqsqlcipher.so to the QT_INSTALL_PLUGINS/sqldrivers
 Assuming Qt is installed in ~/Qt this would be something like ~/Qt/5.15.1/android_armv7a/plugins/sqldrivers
 
 
-## Licences
+## Licenses
 
-For this plugin see [LICENCE](https://github.com/sjemens/qsqlcipher-qt5/blob/master/LICENSE) (**LGPLV3**)
+For this plugin see [LICENCE](https://github.com/sjemens/qsqlcipher-qt5/blob/android-5.15/LICENSE) (**LGPLV3**)
 
 [OpenSSL](https://www.openssl.org/source/license.html) (**dual OpenSSL and SSLeay License**)
 
