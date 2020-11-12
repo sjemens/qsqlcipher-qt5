@@ -725,7 +725,6 @@ bool QSQLiteDriver::open(const QString & db, const QString &, const QString &, c
     int regexpCacheSize = 25;
 #endif
 
-//    const auto opts = conOpts.splitRef(QLatin1Char(';'));
     const auto opts = QStringView{conOpts}.tokenize(u';');
     for (auto option : opts) {
         option = option.trimmed();
