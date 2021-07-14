@@ -1,39 +1,75 @@
+TEMPLATE = lib
 TARGET = qsqlcipher
 
-QT_FOR_CONFIG += sqldrivers-private
+CONFIG(release, debug|release): DEFINES *= NDEBUG
+win32 {
+    CONFIG(release, debug|release): DESTDIR = release/sqldrivers
+    else:CONFIG(debug, debug|release): DESTDIR = debug/sqldrivers
+    # Produce full-symbolic debugging information in qsqlcipher.pdb file
+    QMAKE_CXXFLAGS_RELEASE += /Zi
+    QMAKE_LFLAGS_RELEASE += /DEBUG
+}
+else:DESTDIR = sqldrivers
 
-HEADERS += $$PWD/qsql_sqlite_p.h
-SOURCES += $$PWD/qsql_sqlite.cpp $$PWD/smain.cpp
-
-system-sqlcipher {
+unix:!macx {
     CONFIG += link_pkgconfig
-    PKGCONFIG += sqlcipher
-    # or if pkg-config is not available
-    # INCLUDEPATH += /path/to/include/sqlcipher
-    # LIBS += -L/path/to/lib/ -lsqlcipher -lcrypto
-} else {
-    include($$PWD/../3rdparty/sqlcipher.pri)
+    PKGCONFIG += \
+        libssl \
+        libcrypto
+
+    QMAKE_CFLAGS_DEBUG *= -Wno-unused-parameter -Wno-sign-compare -Wno-implicit-fallthrough -Wno-unused-function -g
+    QMAKE_CFLAGS_RELEASE *= -Wno-unused-parameter -Wno-sign-compare -Wno-implicit-fallthrough -Wno-unused-function -g
+}
+else:win32 {
+    INCLUDEPATH += C:/OpenSSL/include
+    win32-msvc*:LIBS += C:/OpenSSL/lib/libssl.lib C:/OpenSSL/lib/libcrypto.lib
+    # win32-g++:LIBS += c:/OpenSSL/lib/MinGW/libeay32.a
+    QMAKE_LFLAGS += /DEBUG
+}
+else:macx {
+    LIBS += \
+        -L$$PWD/../../dependencies/external/openssl/artifacts/release \
+        -lssl \
+        -lcrypto \
+        -lz
+
+    INCLUDEPATH +=$$PWD/../../dependencies/external/openssl/artifacts/release/include
+    QMAKE_LFLAGS += -isysroot $$QMAKE_MAC_SDK_PATH
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
+
+    # To avoid errors on macdeployqt
+    CONFIG -=force_debug_info
+    CONFIG -=separate_debug_info
+
+    QMAKE_POST_LINK += /usr/bin/dsymutil $$DESTDIR/libqsqlcipher.dylib -o $$DESTDIR/libqsqlcipher.dSYM
 }
 
-OTHER_FILES += sqlcipher.json .qmake.conf
-
-PLUGIN_CLASS_NAME = QSQLCipherDriverPlugin
+CONFIG += qt plugin
 
 # follows contents of include(../qsqldriverbase.pri)
-QT  = core core-private sql-private
+QT  = core core_private sql_private
 
-PLUGIN_TYPE = sqldrivers
-load(qt_plugin)
+DEFINES += \
+    QT_NO_CAST_TO_ASCII \
+    SQLITE_OMIT_LOAD_EXTENSION \
+    SQLITE_OMIT_COMPLETE \
+    SQLITE_HAS_CODEC \
+    SQLCIPHER_CRYPTO_OPENSSL \
+    SQLITE_ENABLE_JSON1 \
+    SQLITE_ENABLE_COLUMN_METADATA
 
-DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
+INCLUDEPATH += $$PWD qsqlcipher
+HEADERS += qsqlcipher/qsql_sqlite_p.h
+SOURCES += qsqlcipher/qsql_sqlite.cpp qsqlcipher/smain.cpp
 
-!system-sqlcipher {
-    QMAKE_EXTRA_TARGETS += libtomcrypt
-    win32-msvc {
-        libtomcrypt.commands = cd $$PWD/../3rdparty/libtomcrypt && \
-        nmake -f makefile.msvc CFLAGS="/Ox"
-    } else {
-        libtomcrypt.commands = cd $$PWD/../3rdparty/libtomcrypt && make library CFLAGS=-fPIC
-    }
-    PRE_TARGETDEPS += libtomcrypt
+INCLUDEPATH +=  sqlcipher
+HEADERS +=      sqlcipher/sqlite3.h
+SOURCES +=      sqlcipher/sqlite3.c
+
+OTHER_FILES += qsqlcipher/sqlcipher.json qsqlcipher/.qmake.conf
+
+unix:!macx {
+    # install
+    target.path = $$[QT_INSTALL_PLUGINS]
+    INSTALLS += target
 }

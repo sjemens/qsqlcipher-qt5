@@ -113,6 +113,44 @@ static QSqlError qMakeError(sqlite3 *access, const QString &descr, QSqlError::Er
                      type, QString::number(errorCode));
 }
 
+static void handle_sqlite_callback(void *qobj,int aoperation, char const *adbname, char const *atablename,
+                                   sqlite3_int64 arowid)
+{
+    Q_UNUSED(aoperation);
+    Q_UNUSED(adbname);
+    QSQLiteDriver *driver = static_cast<QSQLiteDriver *>(qobj);
+    if (driver) {
+        QMetaObject::invokeMethod(driver, "handleNotification", Qt::QueuedConnection,
+                                  Q_ARG(QString, QString::fromUtf8(atablename)), Q_ARG(qint64, arowid));
+    }
+}
+
+namespace {
+
+int commitCallback(void *arg)
+{
+    if (QSQLiteDriver* self = reinterpret_cast<QSQLiteDriver*>(arg)) {
+        auto notifications = self->subscribedToNotifications();
+        if (notifications.contains("commit_finished")) {
+            emit self->notification("commit_finished", QSqlDriver::UnknownSource, QVariant(0));
+        }
+    }
+
+    return 0;
+}
+
+void rollbackCallback(void *arg)
+{
+    if (QSQLiteDriver* self = reinterpret_cast<QSQLiteDriver*>(arg)) {
+        auto notifications = self->subscribedToNotifications();
+        if (notifications.contains("rollback_finished")) {
+            emit self->notification("rollback_finished", QSqlDriver::UnknownSource, QVariant(0));
+        }
+    }
+}
+
+}
+
 class QSQLiteResultPrivate;
 
 class QSQLiteResult : public QSqlCachedResult
@@ -669,13 +707,35 @@ QSQLiteDriver::QSQLiteDriver(sqlite3 *connection, QObject *parent)
 {
     Q_D(QSQLiteDriver);
     d->access = connection;
+    registerCallBacks(d);
     setOpen(true);
     setOpenError(false);
+}
+
+void QSQLiteDriver::registerCallBacks(QSQLiteDriverPrivate *d)
+{
+    if (d && d->access) {
+        unRegisterCallBacks(d);
+
+        sqlite3_commit_hook(d->access, &commitCallback, this);
+        sqlite3_rollback_hook(d->access, &rollbackCallback, this);
+        sqlite3_update_hook(d->access, &handle_sqlite_callback, this);
+    }
+}
+void QSQLiteDriver::unRegisterCallBacks(QSQLiteDriverPrivate* d)
+{
+    if (d && d->access) {
+        sqlite3_commit_hook(d->access, Q_NULLPTR, Q_NULLPTR);
+        sqlite3_rollback_hook(d->access, Q_NULLPTR, Q_NULLPTR);
+        sqlite3_update_hook(d->access, Q_NULLPTR, Q_NULLPTR);
+    }
 }
 
 
 QSQLiteDriver::~QSQLiteDriver()
 {
+    Q_D(QSQLiteDriver);
+    unRegisterCallBacks(d);
     close();
 }
 
@@ -786,6 +846,7 @@ bool QSQLiteDriver::open(const QString & db, const QString &, const QString &, c
                                        NULL, &_q_regexp_cleanup);
         }
 #endif
+        registerCallBacks(d);
         return true;
     } else {
         setLastError(qMakeError(d->access, tr("Error opening database"),
@@ -793,6 +854,7 @@ bool QSQLiteDriver::open(const QString & db, const QString &, const QString &, c
         setOpenError(true);
 
         if (d->access) {
+            unRegisterCallBacks(d);
             sqlite3_close(d->access);
             d->access = 0;
         }
@@ -813,6 +875,7 @@ void QSQLiteDriver::close()
             sqlite3_update_hook(d->access, NULL, NULL);
         }
 
+        unRegisterCallBacks(d);
         const int res = sqlite3_close(d->access);
 
         if (res != SQLITE_OK)
@@ -982,18 +1045,6 @@ QString QSQLiteDriver::escapeIdentifier(const QString &identifier, IdentifierTyp
     return _q_escapeIdentifier(identifier);
 }
 
-static void handle_sqlite_callback(void *qobj,int aoperation, char const *adbname, char const *atablename,
-                                   sqlite3_int64 arowid)
-{
-    Q_UNUSED(aoperation);
-    Q_UNUSED(adbname);
-    QSQLiteDriver *driver = static_cast<QSQLiteDriver *>(qobj);
-    if (driver) {
-        QMetaObject::invokeMethod(driver, "handleNotification", Qt::QueuedConnection,
-                                  Q_ARG(QString, QString::fromUtf8(atablename)), Q_ARG(qint64, arowid));
-    }
-}
-
 bool QSQLiteDriver::subscribeToNotification(const QString &name)
 {
     Q_D(QSQLiteDriver);
@@ -1003,14 +1054,12 @@ bool QSQLiteDriver::subscribeToNotification(const QString &name)
     }
 
     if (d->notificationid.contains(name)) {
-        qWarning("Already subscribing to '%s'.", qPrintable(name));
+        qWarning("Already subscribed to '%s'.", qPrintable(name));
         return false;
     }
 
     //sqlite supports only one notification callback, so only the first is registered
     d->notificationid << name;
-    if (d->notificationid.count() == 1)
-        sqlite3_update_hook(d->access, &handle_sqlite_callback, reinterpret_cast<void *> (this));
 
     return true;
 }
@@ -1027,11 +1076,7 @@ bool QSQLiteDriver::unsubscribeFromNotification(const QString &name)
         qWarning("Not subscribed to '%s'.", qPrintable(name));
         return false;
     }
-
     d->notificationid.removeAll(name);
-    if (d->notificationid.isEmpty())
-        sqlite3_update_hook(d->access, NULL, NULL);
-
     return true;
 }
 
@@ -1045,12 +1090,6 @@ void QSQLiteDriver::handleNotification(const QString &tableName, qint64 rowid)
 {
     Q_D(const QSQLiteDriver);
     if (d->notificationid.contains(tableName)) {
-#if QT_DEPRECATED_SINCE(5, 15)
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_DEPRECATED
-        emit notification(tableName);
-QT_WARNING_POP
-#endif
         emit notification(tableName, QSqlDriver::UnknownSource, QVariant(rowid));
     }
 }

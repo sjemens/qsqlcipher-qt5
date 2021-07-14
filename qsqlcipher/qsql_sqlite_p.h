@@ -99,6 +99,9 @@ public:
     QStringList subscribedToNotifications() const override;
 private Q_SLOTS:
     void handleNotification(const QString &tableName, qint64 rowid);
+private:
+    void registerCallBacks(QSQLiteDriverPrivate* d);
+    void unRegisterCallBacks(QSQLiteDriverPrivate* d);
 };
 
 QT_END_NAMESPACE
