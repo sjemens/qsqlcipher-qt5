@@ -42,9 +42,9 @@ void TestQSqlCipher::checkVersion()
     QSqlQuery q(QSqlDatabase::database("db"));
     QVERIFY2(q.exec("PRAGMA cipher_version;"), q.lastError().text().toLatin1().constData());
     QVERIFY(q.next());
-    // The next should have been optional
-    // maybe if there is a need to test for sqlcipher's version
-    // QCOMPARE(q.value(0).toString(), QString("4.4.2 community"));
+    // Optional: Uncomment the next QCOMPARE
+    // if there is a need to test for sqlcipher's version
+    // QCOMPARE(q.value(0).toString(), QString("4.5.1 community"));
 }
 
 void TestQSqlCipher::checkCompileOptions()
