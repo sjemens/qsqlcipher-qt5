@@ -44,7 +44,7 @@ void TestQSqlCipher::checkVersion()
     QVERIFY(q.next());
     // Optional: Uncomment the next QCOMPARE
     // if there is a need to test for sqlcipher's version
-    // QCOMPARE(q.value(0).toString(), QString("4.5.1 community"));
+    // QCOMPARE(q.value(0).toString(), QString("4.5.3 community"));
 }
 
 void TestQSqlCipher::checkCompileOptions()
