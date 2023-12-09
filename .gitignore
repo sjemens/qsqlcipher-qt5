@@ -4,3 +4,6 @@ build*
 *.a
 *.obj
 *.lib
+CMakeFiles
+CMakeCache.txt
+**/.DS_Store
