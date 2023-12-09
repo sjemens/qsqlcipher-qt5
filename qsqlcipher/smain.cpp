@@ -17,7 +17,7 @@ class QSQLCipherDriverPlugin : public QSqlDriverPlugin
 public:
     QSQLCipherDriverPlugin();
 
-    QSqlDriver* create(const QString &) Q_DECL_OVERRIDE;
+    QSqlDriver* create(const QString &) override;
 };
 
 QSQLCipherDriverPlugin::QSQLCipherDriverPlugin()

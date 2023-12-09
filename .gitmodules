@@ -1,0 +1,4 @@
+[submodule "3rdparty/libtomcrypt"]
+	path = 3rdparty/libtomcrypt
+	url = https://github.com/libtom/libtomcrypt
+	tag = 7e863d21429f94ed6a720e24499a12a3f852bb31
