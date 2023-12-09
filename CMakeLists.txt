@@ -39,7 +39,7 @@ qt_feature_module_begin(
 include(configure.cmake)
 qt_feature_module_end(NO_MODULE)
 
-set(WITH_LTM FALSE)
+set(WITH_LTM OFF CACHE BOOL "Build with support for libtommath" FORCE)
 add_subdirectory(3rdparty/libtomcrypt)
 add_subdirectory(qsqlcipher)
 
