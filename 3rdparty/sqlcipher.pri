@@ -12,7 +12,6 @@ DEFINES +=  SQLITE_HAS_CODEC \
             SQLITE_ENABLE_SESSION
 
 !contains(CONFIG, largefile):DEFINES += SQLITE_DISABLE_LFS
-qtConfig(posix_fallocate): DEFINES += HAVE_POSIX_FALLOCATE=1
 winrt {
     DEFINES += SQLITE_OS_WINRT
     QMAKE_CFLAGS += -Gy

@@ -1,4 +1,6 @@
 TARGET = qsqlcipher
+TEMPLATE = lib
+CONFIG += plugin
 
 QT_FOR_CONFIG += sqldrivers-private
 
